@@ -2,6 +2,12 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Reference
+
+> Declamer !!! Following is the reference document for myself as I alwasy tend to forgot the things.
+
+click [here](./reference.md "Reference File") to open reference document
+
 ## Available Scripts
 
 In the project directory, you can run:
