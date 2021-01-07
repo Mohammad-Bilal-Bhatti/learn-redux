@@ -148,3 +148,23 @@ const connectedComponent = use(mapStateToProps, mapDispatchToProps)(Component);
 | ----------------------------- | :------------------------------------------: | ------------------------------------------------------: |
 | Do Not Inject Action Creators |             connect()(Component)             |                     connect(mapStateToProps)(Component) |
 | Inject Action Creators        | connect(null, mapDispatchToProps)(Component) | connect(mapStateToProps, mapDispatchToProps)(Component) |
+
+### App structure [MODERN]
+
+- /src
+  - index.js | The starting point for the app
+  - App.js | The top-level React component
+  - /app
+    - store.js | Creates the Redux store instance
+  - /features
+    - /counter
+      - Counter.js | A React component that shows the UI for the counter feature
+      - counterSlice.js | The Redux logic for the counter feature
+
+## Tips
+
+- use redux-toolkit for creating reducersSlices
+
+Writing immutable update logic by hand is hard, and accidentally mutating state in reducers is the single most common mistake Redux users make.
+
+Redux Toolkit's createSlice function lets you write immutable updates an easier way!
