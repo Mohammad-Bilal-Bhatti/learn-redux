@@ -1548,13 +1548,13 @@ Automated testing is all about writing code to test our code. We can write test 
 Test the application without its external dependencies or resources ... excluding: databases, files, web-services. In order to test with dependencies we should mock the behaviour of our external resources.
 
 Testing paramid
-    
+```    
     /\      <- user acptance tests
    /--\     <- end 2 end tests  
   /----\    <- system tests
  /------\   <- integration tests
 /--------\  <- unit tests
-
+```
 A unit may be single or multiple object, some people argues that if it touches other components then it is an integration test.
 
 ---
