@@ -1557,6 +1557,337 @@ Testing paramid
 ```
 A unit may be single or multiple object, some people argues that if it touches other components then it is an integration test.
 
+## Setting up Testing Environment.
+
+### Installing libraries
+```bash
+# Install all these dev dependencies. 
+npm i jest @types/jest @bable/core @bable/preset-env bable-jest --save-dev
+```
+
+- jest | is a popular testing library build on top of jasmine.
+- @types/jest | for intellisence
+- @bable/core | for converting backward compactable code.
+- @bable/preset-env | is a collection of plugins for @bable, converting es6 syntax to backward compactable code.
+- bable-jest | is a jest for bable.
+
+### Configure Bable.js
+
+In the root of the project create file with name 'bable.config.js'
+```json
+{
+  "preset": ["@bable/preset-env"]
+}
+
+```
+### Create Test File
+
+Now create a file with $name.spec.$ext pattern.
+```js
+
+// math.spec.js
+
+it('First test', () => {
+
+})
+
+``` 
+### Run Test.
+
+```bash
+jest
+
+## OR
+
+jest --watch
+
+```
+
+## Writing First Test.
+
+Create file with any name for demonstration purpose.
+
+```js
+
+// Math.js
+
+export const sum = (a, b) => { return a + b }
+
+export const isEven = (num) => { return num % 2 === 0}
+
+// Math.spec.js
+
+import { isEven } from "./Math.js"
+
+it('isEven should return true if given an even number', () => {
+  // Function Under Test (SUT)
+  const result = isEven(2)
+  expect(result).toEqual(true)
+})
+
+it('isEven should return false if given an odd number', () => {
+  // Function Under Test (SUT)
+  const result = isEven(1)
+  expect(result).toEqual(false)
+})
+
+```
+
+### Grouping the tests
+
+we can use descirbe to group our test called test sweets that are familiar some how.
+
+```js
+
+// Math.spec.js
+
+describe('isEven', () => {
+  it('...', ()=>{...})
+  it('...', ()=>{...})
+})
+```
+
+### Unit testing Redux Applications.
+
+Unit: A unit can be single or multiple objects as long as you are not touching the external resources.
+
+One way to test redux application is to test each building block  in solitary(isolation) mode. eg. Reducer and Action, and Middleware. - This is the poor way of testing redux application.
+
+#### Solitary Tests
+- Coupled to implementation
+- Break often
+- Slow us down
+- Not reliable.
+
+is unit testing is a waste of time?
+
+The problem is not unit testing itself. Its how you practice it.
+
+Our tests should not test our implementation; instead it should test the behaviour of our application.
+
+Test the behaviour not implementation.
+
+Lets take an example of microwave timer. you press the button an the timer will start running we don't care how the timer is implemented internally.
+
+Just for a time being forgot about ui and think what redux apps are really? - Its a store management engine. It dispatch action and the state changes. All the building blocks like reducers and action creators and middleware are there to ensure that store changes accordingly.
+
+- Social Tests | Tests that involves multiple functions and objects working together.
+
+#### Advantages
+- Less fragile. | knows nothing about implementation. eg. What actions, and middleware are
+- Cheaper to write.
+- Cheaper to maintain.
+- More reliable.
+
+It is like testing microwave that test the behaviour of our application not implementation. What happens internally are irrelevant to these tests. The don't care about one action creator calls another action creator, they don't care weather we have middleware that calculates magically catches an action and dispatches another action, they dont care how many reducers we have and how we combine them, because are implementation details.
+
+A lot of book tells that unit test should be testing component / module in isolation, but not everytime because each problem is different. solitary tests are great and have their own uses. If the product we are building is complex enough we should test them in isolation.
+
+In redux application you will hardly see the loops and if-else combination in the building blocks, because it doesn't includes any algorighm or complex logic. What we need to test is the collaboration of these building blocks together 
+
+### Solitary tests.
+
+```js
+
+// bugs.spec.js
+
+import { addBug } from "../bugs.js"
+import { apiCallBegin } from "../api.js"
+
+describe( "bugSlice", () => {
+  describe("action creators", () => {
+    it("addBug", () => {
+      const bug = { description: "a" }  
+      const result = addBug(bug)
+      const espected = {
+        type: apiCallBegin.type,
+        payload: {
+          url: "/bugs",
+          method: "post",
+          data: bug,
+          onSuccess: 'bugs/bugAdded',
+        }
+        expect(result).toEqual(expected)
+      }
+    })
+  })
+})
+
+```
+
+Note if the change the internal details - the way we implement changes the above solitary test will fails. because the above tests knows too much details about internal implementation. - We should test the behaviour not implementation, because the internal implementations can vary. The above approch in testing inputs and outputs of the function. This is a valid testing approch but not in every case.  
+
+
+### Social Tests.
+
+```js
+
+import { addBug } from "../bugs"
+import { configureStore } from "../configureStore"
+
+ 
+describe('bugSlice', () => {
+  it('should handle addBug action', async () => {
+     // dispatch addBug action.
+     // Then look at the store.
+     // Note: here we don't care what happens under the hood, we don't care how many actions, reducers or middleware are involved. 
+    
+    const store = configureStore()
+    const bug = { description: "a" }
+    await store.dispatch( addBug(bug) )
+
+    expect( store.getState().entities.bugs.list ).toHaveLength(1)
+
+  })
+})
+
+// Note: Middlewares::  logger > error > api   
+// Our every middleware function should return what it passes to the next(action)
+
+const loggerMiddleware = param => store => next => action => {
+  console.log('Logging: ', param)
+  // next(action) // before
+  return next(action) // now
+}
+
+const toastMiddleware = store => next => action => {
+  if ( action.type === 'error' ) console.log('TOAST: ', action.payload)
+  // next(action) // before
+  return next(action) // now
+}
+
+// Do same with the apiMiddleware...
+
+```
+
+#### ERROR
+
+In you encounter the error when running the test of 'generatorRuntime is not defined' then you should follow the following steps.
+
+##### Step 1
+```bash
+npm i @bable/plugin-transform-runtime --save-dev
+```
+
+##### Step 2
+
+```json
+// bable.config.js
+
+{
+  "preset": [ '@bable/preset-env' ],
+  "plugins": [ '@bable/plugin-transform-runtime' ] // Add this line
+}
+
+
+```
+
+### Mocking HTTP Calls.
+
+Units test doesn't involves touching external resources: like backend services, and so on... because it slow down our testing. We want our unit test super fast so we can run them frequently. The second problem with external resources is that they may not be available at the time we are running the unit tests. What if backend services are down for some reason.
+
+When ever we have an external resource we should a mock or fake object.
+
+
+#### Installing Mocking Adapter for axios
+```bash
+npm i axios-mock-adapter --save-dev
+```
+
+```js
+
+import MockAdapter from 'axios-mock-adapter'
+import axios from 'axios'
+
+import { addBug } from "../bugs"
+import { configureStore } from "../configureStore"
+
+ 
+describe('bugSlice', () => {
+  it('should handle addBug action', async () => {
+    const bug = { description: "a" }
+    const savedBug = { ...bug, id: 1 }
+
+    const fakeAxios = new MockAdapter( axios )
+    fakeAxios.onPost('/bugs').reply(200, savedBug)
+    
+    const store = configureStore()  
+    await store.dispatch( addBug(bug) )
+
+    expect( store.getState().entities.bugs.list ).toContainEqual(savedBug)
+
+  })
+})
+
+```
+
+### Writing Maintainable Tests.
+
+For writing maintainable test we should follow the AAA pattern
+- A | Arrange :: contains all the initilization code.
+- A | Act :: contains code for pocking the system or triggering an acttion.
+- A | Assert :: contains the expectation code. 
+
+```js
+
+import MockAdapter from 'axios-mock-adapter'
+import axios from 'axios'
+
+import { addBug } from "../bugs"
+import { configureStore } from "../configureStore"
+
+ 
+describe('bugSlice', () => {
+
+  let fakeAxios
+  let store
+
+  // will be called before every test.
+  beforeEach( () => {
+    fakeAxios = new MockAdapter( axios )
+    store = configureStore()
+  })
+
+  it('should add the bug to the store, if it saved it to the server', async () => {
+
+    // Arrange.
+    const bug = { description: "a" }
+    const savedBug = { ...bug, id: 1 }
+
+    // Act. 
+    await store.dispatch( addBug(bug) )
+    
+    // Assert.
+    expect( store.getState().entities.bugs.list ).toContainEqual(savedBug)
+
+  })
+  it('should not add the bug to the store, if not saved it to the server', async () => {
+
+    // Arrange.
+    const bug = { description: "a" }
+
+    // Act. 
+    await store.dispatch( addBug(bug) )
+    
+    // Assert.
+    expect( store.getState().entities.bugs.list ).toHaveLenght(0)
+
+  })
+})
+
+```
+### Test Coverage Report.
+
+As we write tests we need to know what parts of our applications are tested or not. To get this report we do the following steps.
+
+```bash
+
+jest --coverage
+
+```
+
+> Cource Completed Date: Sat, 9 Jan. 2020 @ 12:00 PM - Thank you Mosh
+
 ---
 
 ## REFERENCES
